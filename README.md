@@ -1,15 +1,18 @@
 # Chess Better
 
-A Chrome extension that enhances chess.com with customizable dark themes and ad blocking.
+A Chrome extension that enhances chess.com with customizable dark themes, custom board/piece sets, and ad blocking.
 
 ## Features
 
 - **11 Dark Themes** - Midnight, Charcoal, AMOLED, Ocean, Forest, Mocha, Rose, Nord, Dracula, Solarized, and chess.com Default
+- **Custom Board Themes** - 14 board styles including Walnut, Burled Wood, Dark Wood, Tournament, and more
+- **Custom Piece Sets** - 16 piece sets from chess.com and Lichess open-source collections (Staunty, Dubrovny, Cooke, California, Cburnett, Merida, Pirouetti, and more)
 - **Custom Colors** - Full control over sidebar, panels, buttons, and text colors
 - **Ad Blocker** - Removes ads and collapses empty ad containers
 - **Font Selection** - Choose from 9 font options including Inter, Roboto, Poppins, JetBrains Mono, and more
 - **Sidebar Width** - Adjustable sidebar width (150px - 350px)
 - **Flat UI** - Removes rounded corners and shadows for a clean look
+- **Live Apply** - Changes apply instantly without page refresh
 
 ## Installation
 
@@ -25,19 +28,32 @@ A Chrome extension that enhances chess.com with customizable dark themes and ad 
 Click the extension icon in the toolbar to open the settings popup.
 
 - **Theme presets**: Click a theme card to load its colors
+- **Board / Pieces**: Select from dropdown menus, preview pieces before applying
 - **Custom colors**: Expand "+ Custom Colors" to fine-tune individual colors
-- **Apply**: Click Apply to save and apply changes
+- **Apply**: Click Apply to save and apply changes (no refresh needed)
 - **Reset**: Click Reset to restore default settings
+
+## Piece Sets
+
+### Chess.com Built-in
+Neo Wood, Wood, Tournament, Classic, Neo, Marble, Metal, Vintage, Glass
+
+### Lichess Open Source
+Staunty, Dubrovny, Cooke, California, Cburnett, Merida, Pirouetti
 
 ## Files
 
 | File | Description |
 |---|---|
 | `manifest.json` | Chrome extension manifest (v3) |
-| `content.js` | Injects CSS variables and handles ad removal |
+| `content.js` | Injects CSS variables, handles board/piece themes, and ad removal |
 | `theme.css` | Dark theme styles using CSS custom properties |
 | `popup.html` | Settings popup UI |
-| `popup.js` | Popup logic, theme presets, and storage |
+| `popup.js` | Popup logic, theme presets, piece preview, and storage |
+
+## Credits
+
+- Lichess piece sets are from [lichess-org/lila](https://github.com/lichess-org/lila) (AGPL-3.0)
 
 ## License
 

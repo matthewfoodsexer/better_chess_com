@@ -263,6 +263,59 @@
     </div>
   </div>
 
+  <!-- Board & Pieces -->
+  <div class="section">
+    <div class="section-title">Board</div>
+    <div class="row">
+      <select id="boardTheme" style="flex:1; background:#1f1f1f; border:1px solid #333; color:#ccc; padding:4px 6px; font-size:12px; outline:none;">
+        <option value="none">Default (chess.com)</option>
+        <option value="walnut">Walnut</option>
+        <option value="burled_wood">Burled Wood</option>
+        <option value="dark_wood">Dark Wood</option>
+        <option value="tournament">Tournament</option>
+        <option value="brown">Brown</option>
+        <option value="green">Green</option>
+        <option value="tan">Tan</option>
+        <option value="marble">Marble</option>
+        <option value="stone">Stone</option>
+        <option value="parchment">Parchment</option>
+        <option value="blue">Blue</option>
+        <option value="sand">Sand</option>
+        <option value="orange">Orange</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Pieces</div>
+    <div class="row">
+      <select id="pieceTheme" style="flex:1; background:#1f1f1f; border:1px solid #333; color:#ccc; padding:4px 6px; font-size:12px; outline:none;">
+        <option value="none">Default (chess.com)</option>
+        <optgroup label="Chess.com">
+          <option value="neo_wood">Neo Wood</option>
+          <option value="wood">Wood</option>
+          <option value="tournament">Tournament</option>
+          <option value="classic">Classic</option>
+          <option value="neo">Neo</option>
+          <option value="marble">Marble</option>
+          <option value="metal">Metal</option>
+          <option value="vintage">Vintage</option>
+          <option value="glass">Glass</option>
+        </optgroup>
+        <optgroup label="Lichess (Open Source)">
+          <option value="staunty">Staunty</option>
+          <option value="dubrovny">Dubrovny</option>
+          <option value="cooke">Cooke</option>
+          <option value="california">California</option>
+          <option value="cburnett">Cburnett</option>
+          <option value="merida">Merida</option>
+          <option value="pirouetti">Pirouetti</option>
+        </optgroup>
+      </select>
+    </div>
+    <div id="piecePreview" style="display:flex; gap:2px; margin-top:8px; justify-content:center;"></div>
+  </div>
+
   <!-- Theme Presets -->
   <div class="section">
     <div class="section-title">Theme</div>
@@ -435,6 +488,10 @@
       <div class="color-row">
         <span class="label">Primary BG</span>
         <input type="color" class="color-picker" id="btnPrimaryBg" value="#2a2a2a">
+      </div>
+      <div class="color-row">
+        <span class="label">Primary Text</span>
+        <input type="color" class="color-picker" id="btnPrimaryText" value="#cccccc">
       </div>
 
       <div class="section-title">Text</div>

@@ -1,46 +1,48 @@
-/* ============================================
-   Chess Better — Flat Dark Theme + Ad Block
-   ============================================ */
+/* Chess Better */
 
-/* --- Flat UI: no rounded corners, no shadows --- */
-*,
-*::before,
-*::after {
+/* ==========================================
+   Theme styles — only active when
+   .chess-better-theme is on <html>
+   ========================================== */
+
+/* --- Flat UI --- */
+.chess-better-theme *,
+.chess-better-theme *::before,
+.chess-better-theme *::after {
   border-radius: 0 !important;
   box-shadow: none !important;
   text-shadow: none !important;
 }
 
 /* --- Font (exclude icon fonts) --- */
-body,
-body *:not([class*="icon"]):not([class*="Icon"]):not([class*="fa-"]):not([class*="fa "]):not([class*="glyph"]):not([class*="chess-"]):not([data-icon]):not(i),
-input,
-button,
-select,
-textarea {
+.chess-better-theme body,
+.chess-better-theme body *:not([class*="icon"]):not([class*="Icon"]):not([class*="fa-"]):not([class*="fa "]):not([class*="glyph"]):not([class*="chess-"]):not([data-icon]):not(i),
+.chess-better-theme input,
+.chess-better-theme button,
+.chess-better-theme select,
+.chess-better-theme textarea {
   font-family: var(--cb-font, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif) !important;
 }
 
-
 /* --- Base --- */
-body,
-html {
+.chess-better-theme body,
+.chess-better-theme {
   background: var(--cb-bg, #111) !important;
+  color: var(--cb-text, #ccc) !important;
 }
 
-body {
+.chess-better-theme body {
   --globalBackground: var(--cb-bg, #111) !important;
   --globalBackgroundOpaque: var(--cb-bg, #111) !important;
   --globalSecondaryBackground: var(--cb-panel-bg, #191919) !important;
   --globalTertiaryBackground: var(--cb-section-header-bg, #1f1f1f) !important;
   --globalAccentBackground: var(--cb-btn-bg, #252525) !important;
   --theme-background-color: var(--cb-bg, #111) !important;
-  color: var(--cb-text, #ccc) !important;
 }
 
 /* --- Navigation Sidebar --- */
-#sidebar-main-menu,
-.sidebar-container {
+.chess-better-theme #sidebar-main-menu,
+.chess-better-theme .sidebar-container {
   background: var(--cb-sidebar-bg, #0c0c0c) !important;
   border-right: 1px solid #222 !important;
   min-width: var(--cb-sidebar-width, 220px) !important;
@@ -50,221 +52,213 @@ body {
   overflow: visible !important;
 }
 
-.sidebar-container *,
-.sidebar-container div,
-#sidebar-main-menu *,
-#sidebar-main-menu div {
+.chess-better-theme .sidebar-container *,
+.chess-better-theme .sidebar-container div,
+.chess-better-theme #sidebar-main-menu *,
+.chess-better-theme #sidebar-main-menu div {
   overflow: visible !important;
   text-overflow: unset !important;
   background-color: inherit !important;
 }
 
-/* Force sidebar background on all children and bottom bar */
-#sidebar-main-menu > *,
-.sidebar-container > * {
+.chess-better-theme #sidebar-main-menu > *,
+.chess-better-theme .sidebar-container > * {
   background: var(--cb-sidebar-bg, #0c0c0c) !important;
 }
 
-[class*="sidebar-link"] {
+.chess-better-theme [class*="sidebar-link"] {
   color: var(--cb-sidebar-link, #888) !important;
   white-space: nowrap !important;
 }
 
-[class*="sidebar-link"]:hover {
+.chess-better-theme [class*="sidebar-link"]:hover {
   background: var(--cb-sidebar-link-hover-bg, #1a1a1a) !important;
   color: var(--cb-text, #ccc) !important;
 }
 
-/* --- User profile bar at sidebar bottom --- */
-.home-user-info {
+.chess-better-theme .home-user-info {
   background: var(--cb-bg, #111) !important;
 }
 
-.home-username-link {
+.chess-better-theme .home-username-link {
   color: var(--cb-sidebar-link, #888) !important;
 }
 
 /* --- Top Bar --- */
-[class*="toolbar"],
-#tb {
+.chess-better-theme [class*="toolbar"],
+.chess-better-theme #tb {
   background: var(--cb-sidebar-bg, #0c0c0c) !important;
   border-bottom: 1px solid #222 !important;
 }
 
-/* --- Side Panel (game sidebar) --- */
-#board-layout-sidebar,
-.board-layout-sidebar {
-  background: var(--cb-panel-bg, #161616) !important;
-}
-
-.layout-column-two {
+/* --- Side Panel --- */
+.chess-better-theme #board-layout-sidebar,
+.chess-better-theme .board-layout-sidebar,
+.chess-better-theme .layout-column-two {
   background: var(--cb-panel-bg, #161616) !important;
 }
 
 /* --- Sections --- */
-.v5-section,
-.v5-section-shadow,
-.v5-section-shadow-hover {
+.chess-better-theme .v5-section,
+.chess-better-theme .v5-section-shadow,
+.chess-better-theme .v5-section-shadow-hover {
   background: var(--cb-panel-bg, #191919) !important;
   border: none !important;
   border-bottom: 2px solid #222 !important;
 }
 
-.v5-header {
+.chess-better-theme .v5-header {
   background: var(--cb-section-header-bg, #1f1f1f) !important;
   border-bottom: 1px solid #2a2a2a !important;
   padding: 10px 12px !important;
 }
 
-.v5-header-name {
+.chess-better-theme .v5-header-name {
   color: var(--cb-text, #aaa) !important;
   text-transform: uppercase !important;
   font-size: 11px !important;
   letter-spacing: 0.5px !important;
 }
 
-.v5-header-link {
+.chess-better-theme .v5-header-link {
   color: #666 !important;
 }
 
 /* --- Chat --- */
-.resizable-chat-area-content,
-.chat-scroll-area-component {
+.chess-better-theme .resizable-chat-area-content,
+.chess-better-theme .chat-scroll-area-component {
   background: var(--cb-panel-bg, #141414) !important;
   border-top: 2px solid #222 !important;
 }
 
 /* --- Buttons --- */
-.ui_v5-button-component {
+.chess-better-theme .ui_v5-button-component {
   background: var(--cb-btn-bg, #1f1f1f) !important;
   border: 1px solid #2a2a2a !important;
   color: var(--cb-btn-text, #aaa) !important;
 }
 
-.ui_v5-button-component:hover {
+.chess-better-theme .ui_v5-button-component:hover {
   background: var(--cb-btn-hover-bg, #282828) !important;
   color: var(--cb-text, #ccc) !important;
 }
 
-.ui_v5-button-component.ui_v5-button-primary {
+.chess-better-theme .ui_v5-button-component.ui_v5-button-primary {
   background: var(--cb-btn-primary-bg, #2a2a2a) !important;
   border: 1px solid #3a3a3a !important;
-  color: var(--cb-btn-text, #ccc) !important;
+  color: var(--cb-btn-primary-text, #ccc) !important;
 }
 
-.ui_v5-button-component.ui_v5-button-primary:hover {
+.chess-better-theme .ui_v5-button-component.ui_v5-button-primary:hover {
   background: var(--cb-btn-hover-bg, #333) !important;
   color: var(--cb-text, #ddd) !important;
 }
 
-.cc-button-component,
-.cc-feature-button-component {
+.chess-better-theme .cc-button-component,
+.chess-better-theme .cc-feature-button-component {
   background: var(--cb-btn-bg, #1f1f1f) !important;
   border: 1px solid #2a2a2a !important;
   color: var(--cb-btn-text, #999) !important;
 }
 
-.cc-button-component:hover,
-.cc-feature-button-component:hover {
+.chess-better-theme .cc-button-component:hover,
+.chess-better-theme .cc-feature-button-component:hover {
   background: var(--cb-btn-hover-bg, #282828) !important;
 }
 
-.selector-button-button,
-.time-selector-button-button {
+.chess-better-theme .cc-button-primary,
+.chess-better-theme .cc-bg-primary {
+  background: var(--cb-btn-primary-bg, #2a2a2a) !important;
+  color: var(--cb-btn-primary-text, #ccc) !important;
+}
+
+.chess-better-theme .cc-button-primary:hover,
+.chess-better-theme .cc-bg-primary:hover {
+  background: var(--cb-btn-hover-bg, #333) !important;
+}
+
+.chess-better-theme .selector-button-button,
+.chess-better-theme .time-selector-button-button {
   background: var(--cb-btn-bg, #1f1f1f) !important;
   border: 1px solid #2a2a2a !important;
   color: var(--cb-btn-text, #999) !important;
 }
 
-.selector-button-button:hover,
-.time-selector-button-button:hover {
+.chess-better-theme .selector-button-button:hover,
+.chess-better-theme .time-selector-button-button:hover {
   background: var(--cb-btn-hover-bg, #282828) !important;
 }
 
 /* --- Player Info / Clock --- */
-.clock-time-monospace {
+.chess-better-theme .clock-time-monospace {
   color: var(--cb-text, #ccc) !important;
 }
 
-[data-test-element="user-tagline-username"] {
+.chess-better-theme [data-test-element="user-tagline-username"] {
   color: var(--cb-text, #aaa) !important;
 }
 
 /* --- Move List --- */
-vertical-move-list {
+.chess-better-theme vertical-move-list {
   background: var(--cb-panel-bg, #141414) !important;
   color: var(--cb-text, #999) !important;
   border-top: 2px solid #222 !important;
 }
 
 /* --- Game Over Modal --- */
-.floating-modal-component {
+.chess-better-theme .floating-modal-component {
   background: var(--cb-panel-bg, #161616) !important;
   border: 1px solid #2a2a2a !important;
 }
 
 /* --- Status / Alerts --- */
-.status-component {
+.chess-better-theme .status-component {
   background: var(--cb-panel-bg, #1a1a1a) !important;
   color: var(--cb-text, #999) !important;
   border-bottom: 2px solid #222 !important;
 }
 
-.alerts-alert,
-.toaster-component.toaster-alert {
+.chess-better-theme .alerts-alert,
+.chess-better-theme .toaster-component.toaster-alert {
   background: var(--cb-panel-bg, #161616) !important;
   border: 1px solid #2a2a2a !important;
   color: var(--cb-text, #aaa) !important;
 }
 
 /* --- Confirm Tray --- */
-.confirm-tray-component {
+.chess-better-theme .confirm-tray-component {
   background: var(--cb-panel-bg, #161616) !important;
   border: 1px solid #2a2a2a !important;
 }
 
-.confirm-tray-text {
+.chess-better-theme .confirm-tray-text {
   color: var(--cb-text, #aaa) !important;
 }
 
 /* --- Promotion Window --- */
-.promotion-window {
+.chess-better-theme .promotion-window {
   background: var(--cb-panel-bg, #161616) !important;
   border: 1px solid #2a2a2a !important;
 }
 
 /* --- Evaluation Bar --- */
-.board-layout-evaluation {
+.chess-better-theme .board-layout-evaluation {
   opacity: 0.85 !important;
 }
 
 /* --- Scrollbar --- */
-::-webkit-scrollbar {
-  width: 5px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--cb-bg, #111);
-}
-
-::-webkit-scrollbar-thumb {
-  background: #2a2a2a;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #3a3a3a;
-}
+.chess-better-theme ::-webkit-scrollbar { width: 5px; }
+.chess-better-theme ::-webkit-scrollbar-track { background: var(--cb-bg, #111); }
+.chess-better-theme ::-webkit-scrollbar-thumb { background: #2a2a2a; }
+.chess-better-theme ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
 
 /* --- Links --- */
-a {
-  color: #777 !important;
-}
+.chess-better-theme a { color: #777 !important; }
+.chess-better-theme a:hover { color: #aaa !important; }
 
-a:hover {
-  color: #aaa !important;
-}
-
-/* --- Ad Block --- */
+/* ==========================================
+   Ad Block — always active (not theme-dependent)
+   ========================================== */
 .placeholder-ad-link,
 [class*="adunit"],
 [class*="ad-slot"],

@@ -15,20 +15,27 @@
     btnText: "#aaaaaa",
     btnHoverBg: "#282828",
     btnPrimaryBg: "#2a2a2a",
+    btnPrimaryText: "#cccccc",
     text: "#cccccc",
     fontFamily: "system",
+    boardTheme: "none",
+    pieceTheme: "none",
   };
 
-  const FONT_MAP = {
-    system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-    inter: '"Inter", sans-serif',
-    roboto: '"Roboto", sans-serif',
-    opensans: '"Open Sans", sans-serif',
-    lato: '"Lato", sans-serif',
-    nunito: '"Nunito", sans-serif',
-    poppins: '"Poppins", sans-serif',
-    mono: '"SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace',
-    jetbrains: '"JetBrains Mono", monospace',
+  const CODES = ["wp", "wn", "wb", "wr", "wq", "wk", "bp", "bn", "bb", "br", "bq", "bk"];
+  const LC = { wp:"wP",wn:"wN",wb:"wB",wr:"wR",wq:"wQ",wk:"wK",bp:"bP",bn:"bN",bb:"bB",br:"bR",bq:"bQ",bk:"bK" };
+  const LICHESS = new Set(["staunty","dubrovny","cooke","california","cburnett","merida","pirouetti"]);
+
+  const FONTS = {
+    system: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif',
+    inter: '"Inter",sans-serif',
+    roboto: '"Roboto",sans-serif',
+    opensans: '"Open Sans",sans-serif',
+    lato: '"Lato",sans-serif',
+    nunito: '"Nunito",sans-serif',
+    poppins: '"Poppins",sans-serif',
+    mono: '"SF Mono","Fira Code",Menlo,Consolas,monospace',
+    jetbrains: '"JetBrains Mono",monospace',
   };
 
   const FONT_URLS = {
@@ -41,141 +48,143 @@
     jetbrains: "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap",
   };
 
+  const AD_SELECTOR = [
+    '[class*="placeholder-ad"]','[class*="adunit"]','[class*="ad-slot"]',
+    '[class*="ad-component"]','[class*="ad-banner"]','[class*="ad-skin"]',
+    '[class*="bottom-banner"]','[class*="top-banner"]','[data-cy="ad"]',
+    '[id*="div-gpt-ad"]','[id*="AdSlot"]','[id*="google_ads"]',
+    'iframe[src*="doubleclick"]','iframe[src*="googlesyndication"]',
+    'iframe[src*="amazon-adsystem"]','iframe[src*="ad-delivery"]',
+    'iframe[src*="aditude"]','iframe[src*="vidazoo"]',
+  ].join(",");
+
   let config = { ...DEFAULTS };
+  let adObserver = null;
+  let adThrottleId = 0;
 
-  function loadSettings() {
-    chrome.storage.sync.get("chessBetter", (result) => {
-      if (result.chessBetter) config = { ...DEFAULTS, ...result.chessBetter };
-      ready(apply);
-    });
-  }
+  // --- Init ---
+  chrome.storage.sync.get("chessBetter", (r) => {
+    if (r.chessBetter) config = { ...DEFAULTS, ...r.chessBetter };
+    if (document.body) apply();
+    else document.addEventListener("DOMContentLoaded", apply);
+  });
 
-  chrome.storage.onChanged.addListener((changes) => {
-    if (changes.chessBetter) {
-      config = { ...DEFAULTS, ...changes.chessBetter.newValue };
+  chrome.storage.onChanged.addListener((c) => {
+    if (c.chessBetter) {
+      config = { ...DEFAULTS, ...c.chessBetter.newValue };
       apply();
     }
   });
 
-  function ready(fn) {
-    if (document.body) fn();
-    else document.addEventListener("DOMContentLoaded", fn);
-  }
-
+  // --- Apply all ---
   function apply() {
     if (!document.body) return;
+    const s = document.documentElement.style;
 
     if (config.theme) {
       document.body.classList.add("dark-mode");
       document.documentElement.classList.add("chess-better-theme");
-      applyVars();
+      s.setProperty("--cb-bg", config.bg);
+      s.setProperty("--cb-sidebar-bg", config.sidebarBg);
+      s.setProperty("--cb-sidebar-link", config.sidebarLink);
+      s.setProperty("--cb-sidebar-link-hover-bg", config.sidebarLinkHoverBg);
+      s.setProperty("--cb-sidebar-width", config.sidebarWidth + "px");
+      s.setProperty("--cb-panel-bg", config.panelBg);
+      s.setProperty("--cb-section-header-bg", config.sectionHeaderBg);
+      s.setProperty("--cb-btn-bg", config.btnBg);
+      s.setProperty("--cb-btn-text", config.btnText);
+      s.setProperty("--cb-btn-hover-bg", config.btnHoverBg);
+      s.setProperty("--cb-btn-primary-bg", config.btnPrimaryBg);
+      s.setProperty("--cb-btn-primary-text", config.btnPrimaryText);
+      s.setProperty("--cb-text", config.text);
+      s.setProperty("--cb-font", FONTS[config.fontFamily] || FONTS.system);
+      loadFont(config.fontFamily);
     } else {
       document.documentElement.classList.remove("chess-better-theme");
-      clearVars();
+      document.body.classList.remove("dark-mode");
+      ["--cb-bg","--cb-sidebar-bg","--cb-sidebar-link","--cb-sidebar-link-hover-bg",
+       "--cb-sidebar-width","--cb-panel-bg","--cb-section-header-bg","--cb-btn-bg",
+       "--cb-btn-text","--cb-btn-hover-bg","--cb-btn-primary-bg","--cb-btn-primary-text","--cb-text","--cb-font"
+      ].forEach((v) => s.removeProperty(v));
+      // Also clear board/piece/font overrides
+      s.removeProperty("--theme-board-style-image");
+      for (const c of CODES) s.removeProperty(`--theme-piece-set-${c}`);
+      const fontEl = document.getElementById("cb-font");
+      if (fontEl) fontEl.remove();
+      loadedFont = "";
     }
 
+    if (!config.theme) {
+      // Ad block still runs
+      if (config.adblock) { removeAds(); startAdObserver(); }
+      return;
+    }
+
+    // Board theme
+    if (config.boardTheme && config.boardTheme !== "none") {
+      s.setProperty("--theme-board-style-image",
+        `url('https://images.chesscomfiles.com/chess-themes/boards/${config.boardTheme}/150.png')`, "important");
+    } else {
+      s.removeProperty("--theme-board-style-image");
+    }
+
+    // Piece theme
+    if (config.pieceTheme && config.pieceTheme !== "none") {
+      const isLichess = LICHESS.has(config.pieceTheme);
+      for (const c of CODES) {
+        const url = isLichess
+          ? `https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/${config.pieceTheme}/${LC[c]}.svg`
+          : `https://images.chesscomfiles.com/chess-themes/pieces/${config.pieceTheme}/150/${c}.png`;
+        s.setProperty(`--theme-piece-set-${c}`, `url('${url}')`, "important");
+      }
+    } else {
+      for (const c of CODES) s.removeProperty(`--theme-piece-set-${c}`);
+    }
+
+    // Ad block
     if (config.adblock) {
       removeAds();
       startAdObserver();
     }
   }
 
-  function applyVars() {
-    const s = document.documentElement.style;
-    s.setProperty("--cb-bg", config.bg);
-    s.setProperty("--cb-sidebar-bg", config.sidebarBg);
-    s.setProperty("--cb-sidebar-link", config.sidebarLink);
-    s.setProperty("--cb-sidebar-link-hover-bg", config.sidebarLinkHoverBg);
-    s.setProperty("--cb-sidebar-width", config.sidebarWidth + "px");
-    s.setProperty("--cb-panel-bg", config.panelBg);
-    s.setProperty("--cb-section-header-bg", config.sectionHeaderBg);
-    s.setProperty("--cb-btn-bg", config.btnBg);
-    s.setProperty("--cb-btn-text", config.btnText);
-    s.setProperty("--cb-btn-hover-bg", config.btnHoverBg);
-    s.setProperty("--cb-btn-primary-bg", config.btnPrimaryBg);
-    s.setProperty("--cb-text", config.text);
-    s.setProperty("--cb-font", FONT_MAP[config.fontFamily] || FONT_MAP.system);
-    loadFont(config.fontFamily);
-  }
-
+  // --- Font loading ---
+  let loadedFont = "";
   function loadFont(key) {
     const url = FONT_URLS[key];
-    if (!url) return;
-    const id = "cb-google-font";
-    if (document.getElementById(id)) document.getElementById(id).remove();
-    const link = document.createElement("link");
-    link.id = id;
-    link.rel = "stylesheet";
-    link.href = url;
-    document.head.appendChild(link);
+    if (!url || key === loadedFont) return;
+    loadedFont = key;
+    let el = document.getElementById("cb-font");
+    if (el) el.href = url;
+    else {
+      el = document.createElement("link");
+      el.id = "cb-font";
+      el.rel = "stylesheet";
+      el.href = url;
+      document.head.appendChild(el);
+    }
   }
 
-  function clearVars() {
-    const vars = [
-      "--cb-bg", "--cb-sidebar-bg", "--cb-sidebar-link", "--cb-sidebar-link-hover-bg",
-      "--cb-sidebar-width", "--cb-panel-bg", "--cb-section-header-bg", "--cb-btn-bg",
-      "--cb-btn-text", "--cb-btn-hover-bg", "--cb-btn-primary-bg", "--cb-text", "--cb-font",
-    ];
-    vars.forEach((v) => document.documentElement.style.removeProperty(v));
-  }
-
+  // --- Ad removal (throttled) ---
   function removeAds() {
-    const adSelectors = [
-      // Direct ad elements
-      '[class*="placeholder-ad"]',
-      '[class*="adunit"]',
-      '[class*="ad-slot"]',
-      '[class*="ad-component"]',
-      '[class*="ad-banner"]',
-      'iframe[src*="doubleclick"]',
-      'iframe[src*="googlesyndication"]',
-      'iframe[src*="amazon-adsystem"]',
-      'iframe[src*="ad-delivery"]',
-      'iframe[src*="aditude"]',
-      'iframe[src*="vidazoo"]',
-      '[id*="google_ads"]',
-      '[id*="div-gpt-ad"]',
-      '[id*="AdSlot"]',
-      // Chess.com specific ad wrappers
-      '[class*="bottom-banner"]',
-      '[class*="top-banner"]',
-      '[class*="ad-skin"]',
-      '[data-cy="ad"]',
-      '.gcse-search',
-    ];
-    const selector = adSelectors.join(", ");
-    document.querySelectorAll(selector).forEach((el) => {
-      // Walk up to remove empty parent wrappers too
-      const parent = el.parentElement;
+    document.querySelectorAll(AD_SELECTOR).forEach((el) => {
+      const p = el.parentElement;
       el.remove();
-      if (parent && parent.children.length === 0 && parent.id !== "body") {
-        // If parent is now empty and looks like an ad wrapper, collapse it
-        parent.style.display = "none";
-        parent.style.height = "0";
-        parent.style.margin = "0";
-        parent.style.padding = "0";
-      }
-    });
-
-    // Also collapse any element that only contains hidden iframes
-    document.querySelectorAll("div > iframe:only-child").forEach((iframe) => {
-      const src = iframe.src || "";
-      if (src.includes("ad") || src.includes("doubleclick") || src.includes("googlesyndication") || src.includes("amazon") || src.includes("vidazoo") || src.includes("aditude")) {
-        const wrapper = iframe.parentElement;
-        if (wrapper) {
-          wrapper.remove();
-        }
+      if (p && p.children.length === 0 && p !== document.body) {
+        p.style.cssText = "display:none!important;height:0!important;margin:0!important;padding:0!important";
       }
     });
   }
-
-  let adObserver = null;
 
   function startAdObserver() {
-    if (adObserver || !document.body) return;
-    adObserver = new MutationObserver(() => removeAds());
+    if (adObserver) return;
+    adObserver = new MutationObserver(() => {
+      if (adThrottleId) return;
+      adThrottleId = setTimeout(() => {
+        adThrottleId = 0;
+        removeAds();
+      }, 500);
+    });
     adObserver.observe(document.body, { childList: true, subtree: true });
   }
-
-  loadSettings();
 })();
