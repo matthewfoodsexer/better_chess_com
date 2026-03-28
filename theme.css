@@ -152,12 +152,12 @@
 .chess-better-theme .ui_v5-button-component.ui_v5-button-primary {
   background: var(--cb-btn-primary-bg, #2a2a2a) !important;
   border: 1px solid #3a3a3a !important;
-  color: var(--cb-btn-primary-text, #ccc) !important;
+  color: #fff !important;
 }
 
 .chess-better-theme .ui_v5-button-component.ui_v5-button-primary:hover {
   background: var(--cb-btn-hover-bg, #333) !important;
-  color: var(--cb-text, #ddd) !important;
+  color: #fff !important;
 }
 
 .chess-better-theme .cc-button-component,
@@ -175,12 +175,13 @@
 .chess-better-theme .cc-button-primary,
 .chess-better-theme .cc-bg-primary {
   background: var(--cb-btn-primary-bg, #2a2a2a) !important;
-  color: var(--cb-btn-primary-text, #ccc) !important;
+  color: #fff !important;
 }
 
 .chess-better-theme .cc-button-primary:hover,
 .chess-better-theme .cc-bg-primary:hover {
   background: var(--cb-btn-hover-bg, #333) !important;
+  color: #fff !important;
 }
 
 .chess-better-theme .selector-button-button,
@@ -196,8 +197,19 @@
 }
 
 /* --- Player Info / Clock --- */
+.chess-better-theme .clock-component {
+  background: #222 !important;
+  border: 1px solid #333 !important;
+}
 .chess-better-theme .clock-time-monospace {
-  color: var(--cb-text, #ccc) !important;
+  color: #eee !important;
+}
+.chess-better-theme .clock-component.clock-player-turn {
+  background: #2a5a2a !important;
+  border-color: #3a7a3a !important;
+}
+.chess-better-theme .clock-player-turn .clock-time-monospace {
+  color: #fff !important;
 }
 
 .chess-better-theme [data-test-element="user-tagline-username"] {
@@ -274,9 +286,35 @@
   color: #a0a0a0 !important;
 }
 
+/* --- Leaderboard: preserve W/D/L colors --- */
+.chess-better-theme a.leaderboard-main-link {
+  color: inherit !important;
+}
+.chess-better-theme .leaderboard-row-percentage-stats {
+  color: inherit !important;
+}
+.chess-better-theme [class*="leaderboard"] [class*="win"],
+.chess-better-theme [class*="leaderboard"] [class*="draw"],
+.chess-better-theme [class*="leaderboard"] [class*="loss"],
+.chess-better-theme [class*="leaderboard"] [class*="green"],
+.chess-better-theme [class*="leaderboard"] [class*="red"],
+.chess-better-theme [class*="leaderboard"] [class*="gray"],
+.chess-better-theme [class*="leaderboard"] [class*="white"] {
+  color: inherit !important;
+}
+
 /* --- Links --- */
-.chess-better-theme a { color: #777 !important; }
-.chess-better-theme a:hover { color: #aaa !important; }
+.chess-better-theme a:not(.leaderboard-main-link) { color: #777 !important; }
+.chess-better-theme a:not(.leaderboard-main-link):hover { color: #aaa !important; }
+
+/* --- Primary-styled links (green bg buttons rendered as <a>) --- */
+.chess-better-theme a.ui_v5-button-primary,
+.chess-better-theme a.cc-button-primary,
+.chess-better-theme a.cc-bg-primary,
+.chess-better-theme a[class*="button-primary"],
+.chess-better-theme a[class*="btn-primary"] {
+  color: #fff !important;
+}
 
 /* ==========================================
    Ad Block — always active (not theme-dependent)
