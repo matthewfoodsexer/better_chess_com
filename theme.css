@@ -14,11 +14,17 @@
   text-shadow: none !important;
 }
 
+/* --- Preserve circular elements --- */
+.chess-better-theme [class*="pie-chart"],
+.chess-better-theme .hint {
+  border-radius: 50% !important;
+}
+
 /* --- Font (exclude icon fonts) --- */
 .chess-better-theme body,
 .chess-better-theme body *:not([class*="icon"]):not([class*="Icon"]):not([class*="fa-"]):not([class*="fa "]):not([class*="glyph"]):not([class*="chess-"]):not([data-icon]):not(i),
-.chess-better-theme input,
-.chess-better-theme button,
+.chess-better-theme input:not([class*="icon"]):not([class*="font-"]),
+.chess-better-theme button:not([class*="icon"]):not([class*="font-"]),
 .chess-better-theme select,
 .chess-better-theme textarea {
   font-family: var(--cb-font, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif) !important;
@@ -95,7 +101,7 @@
 .chess-better-theme #board-layout-sidebar,
 .chess-better-theme .board-layout-sidebar,
 .chess-better-theme .layout-column-two {
-  background: var(--cb-panel-bg, #161616) !important;
+  background: var(--cb-bg, #111) !important;
 }
 
 /* --- Sections --- */
@@ -251,6 +257,22 @@
 .chess-better-theme ::-webkit-scrollbar-track { background: var(--cb-bg, #111); }
 .chess-better-theme ::-webkit-scrollbar-thumb { background: #2a2a2a; }
 .chess-better-theme ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+
+/* --- Preserve chess.com semantic colors --- */
+.chess-better-theme a.tricolor-bar-green,
+.chess-better-theme .tricolor-bar-green {
+  color: #81b64c !important;
+}
+.chess-better-theme a.tricolor-bar-red,
+.chess-better-theme .tricolor-bar-red {
+  color: #e5533b !important;
+}
+.chess-better-theme a.tricolor-bar-white,
+.chess-better-theme .tricolor-bar-white,
+.chess-better-theme a.tricolor-bar-gray,
+.chess-better-theme .tricolor-bar-gray {
+  color: #a0a0a0 !important;
+}
 
 /* --- Links --- */
 .chess-better-theme a { color: #777 !important; }
