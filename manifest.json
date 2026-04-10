@@ -1,19 +1,28 @@
 {
   "manifest_version": 3,
   "name": "Chess Better",
-  "version": "0.1.0",
-  "description": "Ad blocker and opponent info for chess.com",
-  "host_permissions": [
-    "https://api.chess.com/*"
-  ],
+  "version": "1.0.0",
+  "description": "chess.com 상대 정보 위젯 + 광고 차단",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["*://api.chess.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
       "matches": ["*://*.chess.com/*"],
-      "css": ["theme.css"],
+      "css": ["widget.css"],
       "js": ["content.js"],
       "run_at": "document_idle"
     }
   ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
   "icons": {
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"

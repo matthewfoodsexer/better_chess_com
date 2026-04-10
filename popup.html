@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 280px;
+  background: #1a1a1d;
+  color: #e4e4e7;
+  font-family: "SF Mono", "Cascadia Code", "JetBrains Mono", "Consolas", monospace;
+  font-size: 13px;
+  padding: 16px;
+}
+h1 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+h1 span { font-size: 18px; }
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.toggle-row:last-child { border-bottom: none; }
+.toggle-label {
+  font-size: 12.5px;
+  color: #ccc;
+}
+.switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  inset: 0;
+  background: #333;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.slider::before {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 2px;
+  top: 2px;
+  background: #888;
+  border-radius: 50%;
+  transition: transform 0.2s, background 0.2s;
+}
+.switch input:checked + .slider {
+  background: #2d5a2d;
+}
+.switch input:checked + .slider::before {
+  transform: translateX(16px);
+  background: #81b64c;
+}
+.divider {
+  height: 1px;
+  background: rgba(255,255,255,0.1);
+  margin: 10px 0;
+}
+.section-label {
+  font-size: 11px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  margin-top: 4px;
+}
+</style>
+</head>
+<body>
+  <h1><span>♟</span> Chess Better</h1>
+
+  <div class="toggle-row">
+    <span class="toggle-label">Widget Enabled</span>
+    <label class="switch">
+      <input type="checkbox" id="enabled">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="divider"></div>
+  <div class="section-label">Profile</div>
+
+  <div class="toggle-row">
+    <span class="toggle-label">● Status</span>
+    <label class="switch"><input type="checkbox" id="showStatus"><span class="slider"></span></label>
+  </div>
+  <div class="toggle-row">
+    <span class="toggle-label">🌍 Country</span>
+    <label class="switch"><input type="checkbox" id="showCountry"><span class="slider"></span></label>
+  </div>
+  <div class="toggle-row">
+    <span class="toggle-label">🗓 Joined</span>
+    <label class="switch"><input type="checkbox" id="showJoined"><span class="slider"></span></label>
+  </div>
+
+  <div class="divider"></div>
+  <div class="section-label">Rating</div>
+
+  <div class="toggle-row">
+    <span class="toggle-label">📈 Peak Elo</span>
+    <label class="switch"><input type="checkbox" id="showPeak"><span class="slider"></span></label>
+  </div>
+  <div class="toggle-row">
+    <span class="toggle-label">📊 vs Peak</span>
+    <label class="switch"><input type="checkbox" id="showRatingDiff"><span class="slider"></span></label>
+  </div>
+  <div class="toggle-row">
+    <span class="toggle-label">🎯 Avg Opponent</span>
+    <label class="switch"><input type="checkbox" id="showAvgOpponent"><span class="slider"></span></label>
+  </div>
+
+  <div class="divider"></div>
+  <div class="section-label">Record</div>
+
+  <div class="toggle-row">
+    <span class="toggle-label">🎮 Total Games</span>
+    <label class="switch"><input type="checkbox" id="showTotalGames"><span class="slider"></span></label>
+  </div>
+  <div class="toggle-row">
+    <span class="toggle-label">🏆 Win Rate</span>
+    <label class="switch"><input type="checkbox" id="showWinRate"><span class="slider"></span></label>
+  </div>
+  <div class="toggle-row">
+    <span class="toggle-label">🔥 Streak</span>
+    <label class="switch"><input type="checkbox" id="showStreak"><span class="slider"></span></label>
+  </div>
+  <div class="toggle-row">
+    <span class="toggle-label">📋 Last 10</span>
+    <label class="switch"><input type="checkbox" id="showLast10"><span class="slider"></span></label>
+  </div>
+  <div class="toggle-row">
+    <span class="toggle-label">⏰ Timeout Rate</span>
+    <label class="switch"><input type="checkbox" id="showTimeoutRate"><span class="slider"></span></label>
+  </div>
+  <div class="toggle-row">
+    <span class="toggle-label">⚔️ H2H Record</span>
+    <label class="switch"><input type="checkbox" id="showH2H"><span class="slider"></span></label>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
