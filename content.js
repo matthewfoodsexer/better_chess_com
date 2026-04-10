@@ -1,53 +1,7 @@
 (() => {
   "use strict";
 
-  const DEFAULTS = {
-    theme: true,
-    adblock: true,
-    bg: "#111111",
-    sidebarBg: "#0c0c0c",
-    sidebarLink: "#888888",
-    sidebarLinkHoverBg: "#1a1a1a",
-    sidebarWidth: 220,
-    panelBg: "#161616",
-    sectionHeaderBg: "#1f1f1f",
-    btnBg: "#1f1f1f",
-    btnText: "#aaaaaa",
-    btnHoverBg: "#282828",
-    btnPrimaryBg: "#2a2a2a",
-    btnPrimaryText: "#cccccc",
-    text: "#cccccc",
-    fontFamily: "system",
-    boardTheme: "none",
-    pieceTheme: "none",
-  };
-
-  const CODES = ["wp", "wn", "wb", "wr", "wq", "wk", "bp", "bn", "bb", "br", "bq", "bk"];
-  const LC = { wp:"wP",wn:"wN",wb:"wB",wr:"wR",wq:"wQ",wk:"wK",bp:"bP",bn:"bN",bb:"bB",br:"bR",bq:"bQ",bk:"bK" };
-  const LICHESS = new Set(["staunty","dubrovny","cooke","california","cburnett","merida","pirouetti"]);
-
-  const FONTS = {
-    system: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif',
-    inter: '"Inter",sans-serif',
-    roboto: '"Roboto",sans-serif',
-    opensans: '"Open Sans",sans-serif',
-    lato: '"Lato",sans-serif',
-    nunito: '"Nunito",sans-serif',
-    poppins: '"Poppins",sans-serif',
-    mono: '"SF Mono","Fira Code",Menlo,Consolas,monospace',
-    jetbrains: '"JetBrains Mono",monospace',
-  };
-
-  const FONT_URLS = {
-    inter: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
-    roboto: "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap",
-    opensans: "https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap",
-    lato: "https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap",
-    nunito: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap",
-    poppins: "https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap",
-    jetbrains: "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap",
-  };
-
+  // ===== Ad Blocking =====
   const AD_SELECTOR = [
     '[class*="placeholder-ad"]','[class*="adunit"]','[class*="ad-slot"]',
     '[class*="ad-component"]','[class*="ad-banner"]','[class*="ad-skin"]',
@@ -58,114 +12,9 @@
     'iframe[src*="aditude"]','iframe[src*="vidazoo"]',
   ].join(",");
 
-  let config = { ...DEFAULTS };
   let adObserver = null;
   let adThrottleId = 0;
 
-  // --- Init ---
-  chrome.storage.sync.get("chessBetter", (r) => {
-    if (r.chessBetter) config = { ...DEFAULTS, ...r.chessBetter };
-    if (document.body) apply();
-    else document.addEventListener("DOMContentLoaded", apply);
-  });
-
-  chrome.storage.onChanged.addListener((c) => {
-    if (c.chessBetter) {
-      config = { ...DEFAULTS, ...c.chessBetter.newValue };
-      apply();
-    }
-  });
-
-  // --- Apply all ---
-  function apply() {
-    if (!document.body) return;
-    const s = document.documentElement.style;
-
-    if (config.theme) {
-      document.body.classList.add("dark-mode");
-      document.documentElement.classList.add("chess-better-theme");
-      s.setProperty("--cb-bg", config.bg);
-      s.setProperty("--cb-sidebar-bg", config.sidebarBg);
-      s.setProperty("--cb-sidebar-link", config.sidebarLink);
-      s.setProperty("--cb-sidebar-link-hover-bg", config.sidebarLinkHoverBg);
-      s.setProperty("--cb-sidebar-width", config.sidebarWidth + "px");
-      s.setProperty("--cb-panel-bg", config.panelBg);
-      s.setProperty("--cb-section-header-bg", config.sectionHeaderBg);
-      s.setProperty("--cb-btn-bg", config.btnBg);
-      s.setProperty("--cb-btn-text", config.btnText);
-      s.setProperty("--cb-btn-hover-bg", config.btnHoverBg);
-      s.setProperty("--cb-btn-primary-bg", config.btnPrimaryBg);
-      s.setProperty("--cb-btn-primary-text", config.btnPrimaryText);
-      s.setProperty("--cb-text", config.text);
-      s.setProperty("--cb-font", FONTS[config.fontFamily] || FONTS.system);
-      loadFont(config.fontFamily);
-    } else {
-      document.documentElement.classList.remove("chess-better-theme");
-      document.body.classList.remove("dark-mode");
-      ["--cb-bg","--cb-sidebar-bg","--cb-sidebar-link","--cb-sidebar-link-hover-bg",
-       "--cb-sidebar-width","--cb-panel-bg","--cb-section-header-bg","--cb-btn-bg",
-       "--cb-btn-text","--cb-btn-hover-bg","--cb-btn-primary-bg","--cb-btn-primary-text","--cb-text","--cb-font"
-      ].forEach((v) => s.removeProperty(v));
-      // Also clear board/piece/font overrides
-      s.removeProperty("--theme-board-style-image");
-      for (const c of CODES) s.removeProperty(`--theme-piece-set-${c}`);
-      const fontEl = document.getElementById("cb-font");
-      if (fontEl) fontEl.remove();
-      loadedFont = "";
-    }
-
-    if (!config.theme) {
-      // Ad block still runs
-      if (config.adblock) { removeAds(); startAdObserver(); }
-      return;
-    }
-
-    // Board theme
-    if (config.boardTheme && config.boardTheme !== "none") {
-      s.setProperty("--theme-board-style-image",
-        `url('https://images.chesscomfiles.com/chess-themes/boards/${config.boardTheme}/150.png')`, "important");
-    } else {
-      s.removeProperty("--theme-board-style-image");
-    }
-
-    // Piece theme
-    if (config.pieceTheme && config.pieceTheme !== "none") {
-      const isLichess = LICHESS.has(config.pieceTheme);
-      for (const c of CODES) {
-        const url = isLichess
-          ? `https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/${config.pieceTheme}/${LC[c]}.svg`
-          : `https://images.chesscomfiles.com/chess-themes/pieces/${config.pieceTheme}/150/${c}.png`;
-        s.setProperty(`--theme-piece-set-${c}`, `url('${url}')`, "important");
-      }
-    } else {
-      for (const c of CODES) s.removeProperty(`--theme-piece-set-${c}`);
-    }
-
-    // Ad block
-    if (config.adblock) {
-      removeAds();
-      startAdObserver();
-    }
-  }
-
-  // --- Font loading ---
-  let loadedFont = "";
-  function loadFont(key) {
-    const url = FONT_URLS[key];
-    if (!url || key === loadedFont) return;
-    loadedFont = key;
-    let el = document.getElementById("cb-font");
-    if (el) el.href = url;
-    else {
-      el = document.createElement("link");
-      el.id = "cb-font";
-      el.rel = "stylesheet";
-      el.href = url;
-      document.head.appendChild(el);
-    }
-  }
-
-  // --- Ad removal (throttled) ---
   function removeAds() {
     document.querySelectorAll(AD_SELECTOR).forEach((el) => {
       const p = el.parentElement;
@@ -180,11 +29,225 @@
     if (adObserver) return;
     adObserver = new MutationObserver(() => {
       if (adThrottleId) return;
-      adThrottleId = setTimeout(() => {
-        adThrottleId = 0;
-        removeAds();
-      }, 500);
+      adThrottleId = setTimeout(() => { adThrottleId = 0; removeAds(); }, 500);
     });
     adObserver.observe(document.body, { childList: true, subtree: true });
   }
+
+  // ===== Opponent Info =====
+  let shownForOpponent = "";
+  let checkInterval = null;
+
+  async function fetchJSON(url) {
+    try {
+      const r = await fetch(url, { credentials: "omit" });
+      if (!r.ok) return null;
+      return r.json();
+    } catch { return null; }
+  }
+
+  function getMyUsername() {
+    const sidebarUser = document.querySelector(".home-username-link");
+    if (sidebarUser) return sidebarUser.textContent.trim().toLowerCase();
+    const profileLinks = document.querySelectorAll('#sidebar-main-menu a[href*="/member/"]');
+    for (const a of profileLinks) {
+      const m = a.href.match(/\/member\/([^/?#]+)/);
+      if (m) return m[1].toLowerCase();
+    }
+    const bottomPlayer = document.querySelector(
+      '.board-player-default-bottom [data-test-element="user-tagline-username"],' +
+      '.board-player-bottom [data-test-element="user-tagline-username"]'
+    );
+    if (bottomPlayer) return bottomPlayer.textContent.trim().toLowerCase();
+    return null;
+  }
+
+  function getOpponentEl() {
+    const topPlayer = document.querySelector(
+      '.board-player-default-top [data-test-element="user-tagline-username"],' +
+      '.board-player-top [data-test-element="user-tagline-username"]'
+    );
+    if (topPlayer) return topPlayer;
+    const my = getMyUsername();
+    if (!my) return null;
+    const allNames = document.querySelectorAll('[data-test-element="user-tagline-username"]');
+    for (const el of allNames) {
+      if (el.textContent.trim().toLowerCase() !== my) return el;
+    }
+    return null;
+  }
+
+  // Detect time control by matching displayed rating against stats
+  function detectTimeControl(oppEl, stats) {
+    if (!oppEl || !stats) return null;
+
+    // Find the rating number shown next to opponent name on the board
+    const container = oppEl.closest('[class*="board-player"]') || oppEl.parentElement;
+    if (!container) return null;
+
+    const ratingEl = container.querySelector(
+      '[data-test-element="user-tagline-rating"],' +
+      '[class*="user-tagline-rating"]'
+    );
+
+    let displayedRating = null;
+    if (ratingEl) {
+      const num = ratingEl.textContent.replace(/[^0-9]/g, "");
+      if (num) displayedRating = parseInt(num);
+    }
+
+    // If we couldn't find a rating element, try finding any number in parens near the name
+    if (!displayedRating) {
+      const text = container.textContent || "";
+      const m = text.match(/\((\d{3,4})\)/);
+      if (m) displayedRating = parseInt(m[1]);
+    }
+
+    if (!displayedRating) return null;
+
+    // Match against each mode's current rating
+    const modes = ["chess_rapid", "chess_blitz", "chess_bullet", "chess_daily"];
+    let bestMatch = null;
+    let bestDiff = Infinity;
+
+    for (const mode of modes) {
+      const s = stats[mode];
+      if (!s || !s.last) continue;
+      const diff = Math.abs(s.last.rating - displayedRating);
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        bestMatch = mode;
+      }
+    }
+
+    // Trust if within 10 points (small variance possible)
+    if (bestMatch && bestDiff <= 10) return bestMatch;
+    return null;
+  }
+
+  function formatDate(ts) {
+    const d = new Date(ts * 1000);
+    return d.getFullYear() + "." + String(d.getMonth() + 1).padStart(2, "0") + "." + String(d.getDate()).padStart(2, "0");
+  }
+
+  async function getH2H(myUsername, oppUsername) {
+    const data = await fetchJSON(`https://api.chess.com/pub/player/${myUsername}/games/archives`);
+    if (!data || !data.archives) return { w: 0, d: 0, l: 0 };
+
+    const results = await Promise.allSettled(data.archives.map((u) => fetchJSON(u)));
+    const drawResults = new Set(["agreed","stalemate","repetition","insufficient","timevsinsufficient","50move","draw"]);
+    let w = 0, d = 0, l = 0;
+
+    for (const r of results) {
+      if (r.status !== "fulfilled" || !r.value || !r.value.games) continue;
+      for (const g of r.value.games) {
+        const wn = g.white.username.toLowerCase();
+        const bn = g.black.username.toLowerCase();
+        const amWhite = wn === myUsername;
+        if (!amWhite && bn !== myUsername) continue;
+        const opp = amWhite ? bn : wn;
+        if (opp !== oppUsername) continue;
+        const res = amWhite ? g.white.result : g.black.result;
+        if (res === "win") w++;
+        else if (drawResults.has(res)) d++;
+        else l++;
+      }
+    }
+    return { w, d, l };
+  }
+
+  function buildInfoHTML(profile, h2h, peakRating, peakDate) {
+    let html = "";
+
+    if (profile && profile.joined) {
+      html += formatDate(profile.joined);
+    }
+
+    html += ` | <span class="cb-w">${h2h.w}</span>/<span class="cb-l">${h2h.l}</span>/${h2h.d}`;
+
+    if (peakRating) {
+      html += ` | <span class="cb-peak-num">${peakRating}</span> (${peakDate})`;
+    }
+
+    return html;
+  }
+
+  async function showOpponentInfo() {
+    const my = getMyUsername();
+    if (!my) return;
+
+    const oppEl = getOpponentEl();
+    if (!oppEl) return;
+
+    const oppName = oppEl.textContent.trim().toLowerCase();
+    if (!oppName || oppName === my) return;
+    if (oppName === shownForOpponent && document.getElementById("cb-opponent-info")) return;
+
+    const old = document.getElementById("cb-opponent-info");
+    if (old) old.remove();
+
+    shownForOpponent = oppName;
+
+    const infoEl = document.createElement("span");
+    infoEl.id = "cb-opponent-info";
+    infoEl.innerHTML = '<span class="cb-item" style="color:#666">···</span>';
+
+    // Insert after the flag (country flag is usually the last element in the tagline)
+    const tagline = oppEl.closest('[class*="user-tagline"]') || oppEl.parentElement;
+    tagline.appendChild(infoEl);
+
+    // Fetch profile + stats first (fast), show immediately, then H2H (slow)
+    const [profile, stats] = await Promise.all([
+      fetchJSON(`https://api.chess.com/pub/player/${oppName}`),
+      fetchJSON(`https://api.chess.com/pub/player/${oppName}/stats`),
+    ]);
+
+    let peakRating = null;
+    let peakDate = null;
+
+    if (stats) {
+      const mode = detectTimeControl(oppEl, stats);
+      if (mode && stats[mode] && stats[mode].best) {
+        peakRating = stats[mode].best.rating;
+        peakDate = formatDate(stats[mode].best.date);
+      } else {
+        let best = null;
+        for (const k of ["chess_rapid", "chess_blitz", "chess_bullet", "chess_daily"]) {
+          const s = stats[k];
+          if (s && s.best && (!best || s.best.rating > best.rating)) {
+            best = s.best;
+          }
+        }
+        if (best) {
+          peakRating = best.rating;
+          peakDate = formatDate(best.date);
+        }
+      }
+    }
+
+    // Show profile + peak immediately, H2H loading
+    infoEl.innerHTML = buildInfoHTML(profile, { w: "·", d: "·", l: "·" }, peakRating, peakDate);
+
+    // Then fetch H2H and update
+    const h2h = await getH2H(my, oppName);
+    infoEl.innerHTML = buildInfoHTML(profile, h2h, peakRating, peakDate);
+  }
+
+  function startOpponentCheck() {
+    if (checkInterval) return;
+    checkInterval = setInterval(() => {
+      const isGame = /\/(game|play)\//i.test(location.href);
+      if (!isGame) {
+        const old = document.getElementById("cb-opponent-info");
+        if (old) { old.remove(); shownForOpponent = ""; }
+        return;
+      }
+      showOpponentInfo();
+    }, 2000);
+  }
+
+  // ===== Init =====
+  removeAds();
+  startAdObserver();
+  startOpponentCheck();
 })();
