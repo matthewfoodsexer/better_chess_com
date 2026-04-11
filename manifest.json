@@ -1,16 +1,16 @@
 {
   "manifest_version": 3,
   "name": "Chess Better",
-  "version": "1.0.0",
-  "description": "chess.com 상대 정보 위젯 + 광고 차단",
+  "version": "1.1.0",
+  "description": "Opponent info widget for chess.com & lichess.org + ad blocker",
   "permissions": ["storage", "activeTab"],
-  "host_permissions": ["*://api.chess.com/*"],
+  "host_permissions": ["*://api.chess.com/*", "*://lichess.org/*"],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["*://*.chess.com/*"],
+      "matches": ["*://*.chess.com/*", "*://*.lichess.org/*"],
       "css": ["widget.css"],
       "js": ["content.js"],
       "run_at": "document_idle"
