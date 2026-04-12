@@ -48,6 +48,7 @@
   let widgetEnabled = true;
   let fieldSettings = { ...FIELD_DEFAULTS };
   let currentOpponent = null;
+  let currentGameId = null;
   let fetching = false;
   let cachedData = {};
   let gameCheckInterval = null;
@@ -86,19 +87,35 @@
   function checkGame() {
     const { myUsername, opponentUsername } = getPlayers();
     if (!opponentUsername) {
-      if (currentOpponent) { hideWidget(); currentOpponent = null; }
+      if (currentOpponent) { hideWidget(); currentOpponent = null; currentGameId = null; }
       return;
     }
-    if (opponentUsername === currentOpponent) {
-      const w = document.getElementById("cb-widget");
-      if (w && w.style.display === "none" && cachedData[opponentUsername]) renderWidget(cachedData[opponentUsername]);
-      return;
+
+    if (SITE === "lichess") {
+      const gameId = getLichessGameId();
+      if (opponentUsername === currentOpponent && gameId === currentGameId) {
+        const w = document.getElementById("cb-widget");
+        if (w && w.style.display === "none" && cachedData[opponentUsername]) renderWidget(cachedData[opponentUsername]);
+        return;
+      }
+      currentOpponent = opponentUsername;
+      currentGameId = gameId;
+      detectedModeCache = null;
+      fetching = false;
+      console.log(`[Chess Better] Lichess game: ${opponentUsername} (${gameId})`);
+      loadOpponentData(opponentUsername, myUsername);
+    } else {
+      if (opponentUsername === currentOpponent) {
+        const w = document.getElementById("cb-widget");
+        if (w && w.style.display === "none" && cachedData[opponentUsername]) renderWidget(cachedData[opponentUsername]);
+        return;
+      }
+      currentOpponent = opponentUsername;
+      detectedModeCache = null;
+      fetching = false;
+      console.log(`[Chess Better] New opponent: ${opponentUsername}`);
+      loadOpponentData(opponentUsername, myUsername);
     }
-    currentOpponent = opponentUsername;
-    detectedModeCache = null;
-    fetching = false;
-    console.log(`[Chess Better] New opponent: ${opponentUsername}`);
-    loadOpponentData(opponentUsername, myUsername);
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -185,6 +202,11 @@
     name = name.toLowerCase();
     if (!name || name.length < 2) return null;
     return name;
+  }
+
+  function getLichessGameId() {
+    const m = location.pathname.match(/^\/([a-zA-Z0-9]{8,12})/);
+    return m ? m[1].substring(0, 8) : null;
   }
 
   function getLichessRating() {
@@ -314,9 +336,18 @@
       if (ms.record) { const r = ms.record; totalGames = (r.win||0) + (r.loss||0) + (r.draw||0); }
     }
 
+    let winRate = null;
+    if (mode && stats[mode]?.record) {
+      const r = stats[mode].record;
+      const total = (r.win||0) + (r.loss||0) + (r.draw||0);
+      if (total > 0) winRate = Math.round(((r.win||0) / total) * 100);
+    }
+
     let country = profile.country ? profile.country.split("/").pop() : null;
     const status = profile.status || null;
     const gamesData = await fetchChesscomGames(opponent, myUsername, mode);
+
+    if (winRate != null) gamesData.winRate = winRate;
 
     const data = {
       opponent, joined: profile.joined ? new Date(profile.joined * 1000) : null,
@@ -368,84 +399,97 @@
 
   // ── lichess data loading ───────────────────────────────────
   async function loadLichessData(opponent, myUsername) {
-    const profile = await fetchJSON(`https://lichess.org/api/user/${opponent}`);
+    const gameId = getLichessGameId();
+
+    // Step 1: Profile + current game API in parallel (all no-cache)
+    const [profile, currentGame] = await Promise.all([
+      fetchJSON(`https://lichess.org/api/user/${opponent}`, true),
+      gameId ? fetchJSON(`https://lichess.org/api/game/${gameId}`, true) : null,
+    ]);
     if (!profile) { showWidgetError("API request failed"); return; }
 
-    const perfs = profile.perfs || {};
-    let mode = detectGameMode(perfs, opponent);
-
-    // If mode not detected, try from recent game
+    // Mode detection: game API (most reliable) → DOM fallback
+    let mode = currentGame?.speed || null;
     if (!mode) {
-      mode = await detectLichessModeFromGame(opponent);
-      if (mode) detectedModeCache = mode;
+      const perfs = profile.perfs || {};
+      mode = detectLichessMode(perfs);
     }
-    console.log("[Chess Better] Mode:", mode);
+    console.log("[Chess Better] Lichess mode:", mode);
 
-    let peakRating = null, currentRating = null, totalGames = null;
-    if (mode && perfs[mode]) {
-      const mp = perfs[mode];
-      currentRating = mp.rating;
-      totalGames = mp.games;
-      // Lichess doesn't have peak in profile — we'll compute from games
-    }
-
+    const perfs = profile.perfs || {};
+    let currentRating = mode && perfs[mode] ? perfs[mode].rating : null;
     const country = profile.profile?.country || null;
     const status = profile.online ? "online" : "offline";
     const joined = profile.createdAt ? new Date(profile.createdAt) : null;
 
-    const gamesData = await fetchLichessGames(opponent, myUsername, mode);
+    // Step 2: Perf stats (aggregate) + recent games (last10/streak/h2h) in parallel
+    const [perfData, gamesData] = await Promise.all([
+      mode ? fetchJSON(`https://lichess.org/api/user/${opponent}/perf/${mode}`, true) : null,
+      fetchLichessGames(opponent, myUsername, mode),
+    ]);
 
-    // Compute peak from games if available
-    if (gamesData._peakRating) peakRating = gamesData._peakRating;
+    // Aggregate stats from perf API (primary source)
+    let peakRating = null, peakDate = null, totalGames = null;
+    let winRate = null, avgOpponent = null;
+
+    if (perfData?.stat) {
+      const st = perfData.stat;
+      if (st.highest) {
+        peakRating = st.highest.int;
+        peakDate = st.highest.at ? new Date(st.highest.at) : null;
+      }
+      if (st.count) {
+        totalGames = st.count.all;
+        const total = (st.count.win||0) + (st.count.loss||0) + (st.count.draw||0);
+        if (total > 0) winRate = Math.round(((st.count.win||0) / total) * 100);
+        if (st.count.opAvg) avgOpponent = Math.round(st.count.opAvg);
+      }
+    }
+
+    // Fallback: compute from games if perf API failed
+    if (!peakRating && gamesData._peakRating) {
+      peakRating = gamesData._peakRating;
+      peakDate = gamesData._peakDate ? new Date(gamesData._peakDate) : null;
+    }
     if (!peakRating && currentRating) peakRating = currentRating;
+    if (!totalGames && mode && perfs[mode]) totalGames = perfs[mode].games;
 
     const data = {
-      opponent, joined, peakRating, peakDate: null,
+      opponent, joined, peakRating, peakDate,
       currentRating, gameMode: mode, country, status, totalGames,
       ...gamesData,
     };
+    // Perf API overrides games-computed values
+    if (winRate != null) data.winRate = winRate;
+    if (avgOpponent != null) data.avgOpponent = avgOpponent;
     delete data._peakRating;
+    delete data._peakDate;
     cachedData[opponent] = data;
     renderWidget(data);
   }
 
-  async function detectLichessModeFromGame(opponent) {
-    // Get the game ID from URL (lichess uses 8-char IDs)
-    const gameId = location.pathname.match(/^\/([a-zA-Z0-9]{8})/)?.[1];
-    if (!gameId) return null;
-    try {
-      const game = await fetchJSON(`https://lichess.org/api/game/${gameId}`);
-      if (game?.speed) {
-        console.log(`[Chess Better] Lichess mode from game API: ${game.speed}`);
-        return game.speed; // "blitz", "rapid", "bullet", "classical"
-      }
-    } catch (e) { console.error("[Chess Better] lichess game error:", e); }
-    return null;
-  }
-
   async function fetchLichessGames(opponent, myUsername, mode) {
-    const result = { last10: [], streak: { type: null, count: 0 }, h2h: { w:0, d:0, l:0 }, winRate: null, timeoutRate: null, avgOpponent: null, _peakRating: null };
+    const result = { last10: [], streak: { type: null, count: 0 }, h2h: { w:0, d:0, l:0 }, winRate: null, timeoutRate: null, avgOpponent: null, _peakRating: null, _peakDate: null };
     try {
       let url = `https://lichess.org/api/games/user/${opponent}?max=50`;
       if (mode) url += `&perfType=${mode}`;
       console.log(`[Chess Better] Fetching lichess games: ${url}`);
-      const res = await fetch(url, { headers: { Accept: "application/x-ndjson" } });
+      const res = await fetch(url, { headers: { Accept: "application/x-ndjson" }, cache: "no-store" });
       if (!res.ok) { console.error(`[Chess Better] Lichess games API error: ${res.status}`); return result; }
       const text = await res.text();
-      console.log(`[Chess Better] Lichess games response length: ${text.length}, first 200: ${text.substring(0, 200)}`);
       const allGames = text.trim().split("\n").filter(Boolean).map(line => {
         try { return JSON.parse(line); } catch { return null; }
       }).filter(Boolean);
       console.log(`[Chess Better] Parsed ${allGames.length} lichess games`);
 
-      // Track peak rating
-      let peak = 0;
+      // Track peak rating (fallback if perf API fails)
+      let peak = 0, peakTimestamp = null;
       for (const g of allGames) {
         const side = g.players?.white?.user?.id?.toLowerCase() === opponent ? "white" : "black";
         const rating = g.players?.[side]?.rating;
-        if (rating && rating > peak) peak = rating;
+        if (rating && rating > peak) { peak = rating; peakTimestamp = g.createdAt || null; }
       }
-      if (peak > 0) result._peakRating = peak;
+      if (peak > 0) { result._peakRating = peak; result._peakDate = peakTimestamp; }
 
       processGames(allGames, opponent, myUsername, result, "lichess");
     } catch (e) { console.error("[Chess Better] lichess games error:", e); }
@@ -465,7 +509,7 @@
       if (gameResult === "W") totalW++;
       else if (gameResult === "L") { totalL++; if (isTimeout) timeouts++; }
       else totalD++;
-      if (opponentRating) { ratingSum += opponentRating; ratingCount++; }
+      if (opponentRating && ratingCount < 20) { ratingSum += opponentRating; ratingCount++; }
     }
 
     for (const g of recent) {
@@ -491,7 +535,7 @@
     result.timeoutRate = total > 0 ? Math.round((timeouts / total) * 100) : 0;
 
     // Avg opponent (from first 20)
-    if (ratingCount > 0) result.avgOpponent = Math.round(ratingSum / Math.min(ratingCount, 20));
+    if (ratingCount > 0) result.avgOpponent = Math.round(ratingSum / ratingCount);
 
     // H2H
     if (myUsername) {
@@ -537,9 +581,10 @@
   // ══════════════════════════════════════════════════════════════
   // ██ SHARED: Utilities
   // ══════════════════════════════════════════════════════════════
-  async function fetchJSON(url) {
+  async function fetchJSON(url, noCache = false) {
     try {
-      const res = await fetch(url);
+      const opts = noCache ? { cache: "no-store" } : {};
+      const res = await fetch(url, opts);
       if (!res.ok) return null;
       return await res.json();
     } catch { return null; }
