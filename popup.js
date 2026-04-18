@@ -8,7 +8,6 @@ const FIELD_IDS = [
 chrome.storage.sync.get("chessBetter", (res) => {
   const cfg = res.chessBetter || {};
   document.getElementById("enabled").checked = cfg.enabled !== false;
-  document.getElementById("kbMoves").checked = cfg.kbMoves !== false;
 
   const fields = cfg.fields || {};
   for (const id of FIELD_IDS) {
@@ -20,10 +19,9 @@ chrome.storage.sync.get("chessBetter", (res) => {
 // Save on any change
 document.addEventListener("change", () => {
   const enabled = document.getElementById("enabled").checked;
-  const kbMoves = document.getElementById("kbMoves").checked;
   const fields = {};
   for (const id of FIELD_IDS) {
     fields[id] = document.getElementById(id).checked;
   }
-  chrome.storage.sync.set({ chessBetter: { enabled, kbMoves, fields } });
+  chrome.storage.sync.set({ chessBetter: { enabled, fields } });
 });
