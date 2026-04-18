@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>KB Move Practice</title>
+<style>
+body { font-family: monospace; background: #1a1a1d; color: #e4e4e7; margin: 40px; }
+table { border-collapse: collapse; margin: 20px 0; }
+td { border: 1px solid #444; padding: 6px 12px; text-align: center; }
+th { border: 1px solid #444; padding: 6px 12px; background: #2a2a2d; }
+#board { display: grid; grid-template-columns: repeat(8,50px); grid-template-rows: repeat(8,50px); gap: 0; margin: 20px 0; }
+#board div { display: flex; align-items: center; justify-content: center; font-size: 14px; color: #999; }
+.light { background: #b58863; }
+.dark { background: #f0d9b5; }
+.highlight { outline: 3px solid #81b64c; outline-offset: -3px; }
+#prompt { font-size: 24px; margin: 20px 0; }
+#input { font-size: 24px; color: #81b64c; }
+#result { font-size: 18px; margin: 10px 0; min-height: 24px; }
+#score { margin: 10px 0; }
+.correct { color: #81b64c; }
+.wrong { color: #e5533b; }
+</style>
+</head>
+<body>
+<h2>Keyboard Move Practice</h2>
+
+<table>
+<tr><th colspan="2">Left hand (file)</th><th colspan="2">Right hand (rank)</th></tr>
+<tr><td>A</td><td>a</td><td>J</td><td>1</td></tr>
+<tr><td>S</td><td>b</td><td>K</td><td>2</td></tr>
+<tr><td>D</td><td>c</td><td>L</td><td>3</td></tr>
+<tr><td>F</td><td>d</td><td>;</td><td>4</td></tr>
+<tr><td>Q</td><td>e</td><td>U</td><td>5</td></tr>
+<tr><td>W</td><td>f</td><td>I</td><td>6</td></tr>
+<tr><td>E</td><td>g</td><td>O</td><td>7</td></tr>
+<tr><td>R</td><td>h</td><td>P</td><td>8</td></tr>
+</table>
+
+<div id="board"></div>
+<div id="prompt"></div>
+<div>Input: <span id="input">____</span></div>
+<div id="result"></div>
+<div id="score">0 / 0</div>
+
+<script>
+const FILE_MAP = {a:"a",s:"b",d:"c",f:"d",q:"e",w:"f",e:"g",r:"h"};
+const RANK_MAP = {j:"1",k:"2",l:"3",";":"4",u:"5",i:"6",o:"7",p:"8"};
+const FILES = "abcdefgh";
+const RANKS = "12345678";
+
+let buf = [];
+let target = null;
+let correct = 0, total = 0;
+
+function randSq() { return FILES[Math.floor(Math.random()*8)] + RANKS[Math.floor(Math.random()*8)]; }
+
+function newRound() {
+  buf = [];
+  const from = randSq();
+  let to = randSq();
+  while (to === from) to = randSq();
+  target = { from, to };
+  document.getElementById("prompt").textContent = target.from + " → " + target.to;
+  document.getElementById("input").textContent = "____";
+  document.getElementById("result").textContent = "";
+  highlightSquares([]);
+}
+
+// Board
+const board = document.getElementById("board");
+const cells = {};
+for (let r = 7; r >= 0; r--) {
+  for (let f = 0; f < 8; f++) {
+    const sq = FILES[f] + RANKS[r];
+    const div = document.createElement("div");
+    div.className = (f + r) % 2 === 0 ? "light" : "dark";
+    div.textContent = sq;
+    board.appendChild(div);
+    cells[sq] = div;
+  }
+}
+
+function highlightSquares(sqs) {
+  Object.values(cells).forEach(d => d.classList.remove("highlight"));
+  sqs.forEach(s => { if (cells[s]) cells[s].classList.add("highlight"); });
+}
+
+document.addEventListener("keydown", (ev) => {
+  if (ev.key === "Escape") { buf = []; updateInput(); return; }
+  if (ev.key === "Backspace") { buf.pop(); updateInput(); ev.preventDefault(); return; }
+
+  const key = ev.key.toLowerCase();
+  const step = buf.length;
+
+  if (step === 0 || step === 2) {
+    if (FILE_MAP[key]) { buf.push(FILE_MAP[key]); updateInput(); ev.preventDefault(); }
+  } else if (step === 1 || step === 3) {
+    if (RANK_MAP[key]) {
+      buf.push(RANK_MAP[key]);
+      updateInput();
+      ev.preventDefault();
+      if (buf.length === 4) check();
+    }
+  }
+});
+
+function updateInput() {
+  const labels = [...buf];
+  while (labels.length < 4) labels.push("_");
+  document.getElementById("input").textContent = labels[0]+labels[1]+" "+labels[2]+labels[3];
+  const sqs = [];
+  if (buf.length >= 2) sqs.push(buf[0]+buf[1]);
+  if (buf.length >= 4) sqs.push(buf[2]+buf[3]);
+  highlightSquares(sqs);
+}
+
+function check() {
+  total++;
+  const from = buf[0]+buf[1], to = buf[2]+buf[3];
+  const ok = from === target.from && to === target.to;
+  if (ok) correct++;
+  const el = document.getElementById("result");
+  el.textContent = ok ? "Correct!" : "Wrong: " + from + "→" + to;
+  el.className = ok ? "correct" : "wrong";
+  document.getElementById("score").textContent = correct + " / " + total;
+  setTimeout(newRound, ok ? 500 : 1200);
+}
+
+newRound();
+</script>
+</body>
+</html>
